@@ -38,7 +38,7 @@ def setup_topics_folder():
     os.mkdir("./upload_failures/updated_trainings")
 
     if os.path.exists("./validated_eosc_jsons"):
-       shutil.rmtree("./validated_eosc_jsons")
+        shutil.rmtree("./validated_eosc_jsons")
     os.mkdir("./validated_eosc_jsons")
     os.mkdir("./validated_eosc_jsons/updated_trainings")
     os.mkdir("./validated_eosc_jsons/new_trainings")
@@ -86,16 +86,16 @@ def compare_training_material():
             # if the training is not in the old topics, add it to the new_trainings
             else:
                 new_trainings.append(f"./topics/{topic}/{training}")
-            
-            # if the training failed the validation in the previous run 
+
+            # if the training failed the validation in the previous run
             # add it to the corresponding training list
-            if os.path.exists(f"./old_upload_failures/new_trainings/{training}") and os.path.isfile(
+            if os.path.exists(
                 f"./old_upload_failures/new_trainings/{training}"
-            ):
+            ) and os.path.isfile(f"./old_upload_failures/new_trainings/{training}"):
                 new_trainings.append(f"./topics/{topic}/{training}")
-            if os.path.exists(f"./old_upload_failures/updated_trainings/{training}") and os.path.isfile(
+            if os.path.exists(
                 f"./old_upload_failures/updated_trainings/{training}"
-            ):
+            ) and os.path.isfile(f"./old_upload_failures/updated_trainings/{training}"):
                 updated_trainings.append(f"./topics/{topic}/{training}")
 
     return {"new_trainings": new_trainings, "updated_trainings": updated_trainings}
@@ -304,6 +304,7 @@ def validate_eosc_json(eosc_json):
         return f"API error: \n{response.text}", training, payload
     return response.json(), training, payload
 
+
 def process_validated_trainings(validated_new_trainings, validated_updated_trainings):
     """
     Divide the validated trainings into valid and invalid responses and move/copy them to the corresponding folders
@@ -313,20 +314,24 @@ def process_validated_trainings(validated_new_trainings, validated_updated_train
         if str(training[0]) == "True":
             # write the converted training to a file in validated_eosc_jsons/new_trainings
             training_name = training[1].split("/")[-1]
-            with open(f"./validated_eosc_jsons/new_trainings/{training_name}", "w") as f:
+            with open(
+                f"./validated_eosc_jsons/new_trainings/{training_name}", "w"
+            ) as f:
                 json.dump(training[2], f, sort_keys=True, indent=4)
         else:
-            # copy the failed training to upload_failures/new_trainings 
+            # copy the failed training to upload_failures/new_trainings
             # and write the error message to a file
             shutil.copy(training[1], "./upload_failures/new_trainings")
             with open("./upload_failures.txt", "a") as f:
                 f.write(f"{training}\n")
-            
+
     for training in validated_updated_trainings:
         if str(training[0]) == "True":
-            # write the converted training to a file in validated_eosc_jsons/updated_trainings 
+            # write the converted training to a file in validated_eosc_jsons/updated_trainings
             training_name = training[1].split("/")[-1]
-            with open(f"./validated_eosc_jsons/updated_trainings/{training_name}", "w") as f:
+            with open(
+                f"./validated_eosc_jsons/updated_trainings/{training_name}", "w"
+            ) as f:
                 json.dump(training[2], f, sort_keys=True, indent=4)
         else:
             # copy the failed training to upload_failures/updated_trainings
@@ -334,6 +339,7 @@ def process_validated_trainings(validated_new_trainings, validated_updated_train
             shutil.copy(training[1], "./upload_failures/updated_trainings")
             with open("./upload_failures.txt", "a") as f:
                 f.write(f"{training}\n")
+
 
 def upload_training_files(url, headers, authentifier):
     """
@@ -352,7 +358,9 @@ def upload_training_files(url, headers, authentifier):
             response = requests.post(url, headers=headers, auth=authentifier, json=f)
             if response.status_code != 200:
                 # append the error message to the responses
-                create_responses_failures.append(f"An error occurred: {response.text}", training)
+                create_responses_failures.append(
+                    f"An error occurred: {response.text}", training
+                )
                 failed_creations += 1
             else:
                 successful_creations += 1
@@ -361,7 +369,9 @@ def upload_training_files(url, headers, authentifier):
             response = requests.put(url, headers=headers, auth=authentifier, json=f)
             if response.status_code != 200:
                 # append the error message to the responses
-                update_responses_failures.append(f"An error occurred: {response.text}", training)
+                update_responses_failures.append(
+                    f"An error occurred: {response.text}", training
+                )
                 failed_updates += 1
             else:
                 successful_updates += 1
@@ -375,6 +385,7 @@ def upload_training_files(url, headers, authentifier):
     }
     return response
 
+
 if __name__ == "__main__":
     # get the current training material from the galaxy training material api
     setup_topics_folder()
@@ -382,14 +393,20 @@ if __name__ == "__main__":
     # check if there are new or updated trainings and if so convert them to eosc jsons
     training_jsons = compare_training_material()
     new_training_eosc_jsons = [
-        training_to_eosc_json(training_json) for training_json in training_jsons["new_trainings"]
+        training_to_eosc_json(training_json)
+        for training_json in training_jsons["new_trainings"]
     ]
     update_training_eosc_jsons = [
-        training_to_eosc_json(training_json) for training_json in training_jsons["updated_trainings"]
+        training_to_eosc_json(training_json)
+        for training_json in training_jsons["updated_trainings"]
     ]
     # validate the converted jsons
-    validated_new_trainings = [validate_eosc_json(training) for training in new_training_eosc_jsons]
-    validated_updated_trainings = [validate_eosc_json(training) for training in update_training_eosc_jsons]
+    validated_new_trainings = [
+        validate_eosc_json(training) for training in new_training_eosc_jsons
+    ]
+    validated_updated_trainings = [
+        validate_eosc_json(training) for training in update_training_eosc_jsons
+    ]
     # process the validated trainings
     process_validated_trainings(validated_new_trainings, validated_updated_trainings)
 
@@ -397,5 +414,3 @@ if __name__ == "__main__":
     # headers = {"Content-Type": "application/json"}
     # authentifier = ("", "")
     # upload_response = upload_training_files(url, headers, authentifier)
-
-    
